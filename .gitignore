@@ -15,3 +15,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Jupyter Notebook used for Testing
+testing.ipynb
