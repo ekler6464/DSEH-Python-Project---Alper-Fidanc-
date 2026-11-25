@@ -5,7 +5,7 @@ using body mass, diet and taxonomy of extinct and living species.
 
 ## Data
 PHYLACINE 1.2 (Faurby et al., 2018), `Trait_data.csv`
-https://datadryad.org/dataset/doi:10.5061/dryad.bp26v20
+https://raw.githubusercontent.com/MegaPast2Future/PHYLACINE_1.2/refs/heads/master/Data/Traits/Trait_data.csv
 
 ## Setup
 (coming soon)
