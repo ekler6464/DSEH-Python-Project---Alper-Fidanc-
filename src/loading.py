@@ -21,7 +21,10 @@ STATUS_GROUPS = {"LC": "Not Threatened",
                  }
 
 MASS_EDGES = [0, 1_000, 10_000, 45_000, 1_000_000, np.inf]
+
 MASS_LABELS = ["<1 kg", "1-10 kg", "10-45 kg", "45 kg-1 t", ">=1 t"]
+
+DIET_THRESHOLD = 50
 
 
 def load_traits(path=FILE_PATH):
@@ -49,6 +52,54 @@ def load_traits(path=FILE_PATH):
     return pd.read_csv(path)
 
 
+def classify_diet(plant, vertebrate, invertebrate):
+    """Return the diet type of a species by examining the percentages of its diet.
+
+    A species is classified by its main food source if that food source makes up more than
+    DIET_THRESHOLD of its diet. It is set as 50% in reference to Pineda-Munoz & Alroy 2014.
+    If the main food source is less than or equal to DIET_THRESHOLD, the species is a generalist.
+
+    Parameters
+    -----------
+    plant: float
+        Percentage of plant material in the diet
+    vertebrate: float
+        Percentage of vertebrate prey in the diet
+    invertebrate: float
+        Percentage of invertebrate prey in the diet
+
+    Returns
+    --------
+    str
+        "Herbivore", "Carnivore", "Invertivore", or "Generalist".
+    """
+    if plant > DIET_THRESHOLD:
+        return "Herbivore"
+    if vertebrate > DIET_THRESHOLD:
+        return "Carnivore"
+    if invertebrate > DIET_THRESHOLD:
+        return "Invertivore"
+    return "Generalist"
+
+
+def classify_row(row):
+    """ Apply classify_diet to one row from the trait_data.csv.
+
+    Parameters
+    -----------
+    row: pandas.Series
+        One species' row with the three ["Diet.*] columns
+
+    Returns
+    --------
+    str
+        the diet type classification returned by classify_diet
+    """
+    return classify_diet(
+        row["Diet.Plant"], row["Diet.Vertebrate"], row["Diet.Invertebrate"]
+    )
+
+
 def clean_traits(df):
     """Add columns needed for the analysis.
 
@@ -57,6 +108,7 @@ def clean_traits(df):
     status_group -> add names to the status variable
     log_mass -> convert mass from grams to log scale
     mass_bin -> divide species into 5 bins according to weight
+    diet_type -> classify species according to their diet
 
     Parameters
     ----------
@@ -84,10 +136,11 @@ def clean_traits(df):
     # 4. new column which divides species into 5 bins according to their mass
     # the bin cutoffs were made according to the definition of megafauna in ecology
     # right=False so that exactly 45 kg counts as megafauna
-    df["mass_bin"] = pd.cut(df["Mass.g"], bins = MASS_EDGES,
-                            labels = MASS_LABELS, right=False)
+    df["mass_bin"] = pd.cut(df["Mass.g"], bins=MASS_EDGES,
+                            labels=MASS_LABELS, right=False)
 
-    # 5. diet_type
+    # 5. new column to classify species according to their diet type
+    # the classification process is done through the classify_diet function
+    df["diet_type"] = df.apply(classify_row, axis=1)
 
     return df
-
