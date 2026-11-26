@@ -52,7 +52,7 @@ def load_traits(path=FILE_PATH):
     return pd.read_csv(path)
 
 
-def classify_diet(plant, vertebrate, invertebrate):
+def classify_diet(row):
     """Return the diet type of a species by examining the percentages of its diet.
 
     A species is classified by its main food source if that food source makes up more than
@@ -60,44 +60,23 @@ def classify_diet(plant, vertebrate, invertebrate):
     If the main food source is less than or equal to DIET_THRESHOLD, the species is a generalist.
 
     Parameters
-    -----------
-    plant: float
-        Percentage of plant material in the diet
-    vertebrate: float
-        Percentage of vertebrate prey in the diet
-    invertebrate: float
-        Percentage of invertebrate prey in the diet
+    ----------
+    row : pandas.Series
+        One species' row, with the columns Diet.Plant, Diet.Vertebrate
+        and Diet.Invertebrate.
 
     Returns
-    --------
+    -------
     str
         "Herbivore", "Carnivore", "Invertivore", or "Generalist".
     """
-    if plant > DIET_THRESHOLD:
+    if row["Diet.Plant"] > DIET_THRESHOLD:
         return "Herbivore"
-    if vertebrate > DIET_THRESHOLD:
+    if row["Diet.Vertebrate"] > DIET_THRESHOLD:
         return "Carnivore"
-    if invertebrate > DIET_THRESHOLD:
+    if row["Diet.Invertebrate"] > DIET_THRESHOLD:
         return "Invertivore"
     return "Generalist"
-
-
-def classify_row(row):
-    """ Apply classify_diet to one row from the trait_data.csv.
-
-    Parameters
-    -----------
-    row: pandas.Series
-        One species' row with the three ["Diet.*] columns
-
-    Returns
-    --------
-    str
-        the diet type classification returned by classify_diet
-    """
-    return classify_diet(
-        row["Diet.Plant"], row["Diet.Vertebrate"], row["Diet.Invertebrate"]
-    )
 
 
 def clean_traits(df):
@@ -141,6 +120,6 @@ def clean_traits(df):
 
     # 5. new column to classify species according to their diet type
     # the classification process is done through the classify_diet function
-    df["diet_type"] = df.apply(classify_row, axis=1)
+    df["diet_type"] = df.apply(classify_diet, axis=1)
 
     return df
