@@ -1,5 +1,6 @@
 """Draw the charts of the extinction analysis."""
 
+import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import pandas as pd
@@ -12,6 +13,8 @@ MASS_TICKS = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 MASS_TICK_LABELS = ["1 g", "10 g", "100 g", "1 kg", "10 kg",
                     "100 kg", "1 t", "10 t", "100 t"]
 DIET_ORDER = ["Herbivore", "Carnivore", "Invertivore", "Generalist"]
+MORE_COLOR = "#ec4647"    # red: more extinctions than expected
+FEWER_COLOR = "#257de0"   # blue: fewer extinctions than expected
 
 def plot_rate_bars(rates, title, xlabel):
     """Bar chart of extinction rate per group.
@@ -46,7 +49,7 @@ def plot_rate_bars(rates, title, xlabel):
     return fig
 
 
-def plot_mass_violin(df, title = "Body mass of mammals by extinction status"):
+def plot_mass_violin(df, title="Body mass of mammals by extinction status"):
     """Violin plot of body mass distribution for each extinction status group.
 
     Groups are ordered like a timeline: prehistoric extinctions,
@@ -140,6 +143,54 @@ def plot_rate_heatmap(grid, counts, title, xlabel="Diet", ylabel="Body mass"):
     ax.set_ylabel(ylabel)
     ax.tick_params(axis="y", rotation=0)
     ax.tick_params(length=0)
+
+    fig.tight_layout()
+    return fig
+
+
+def plot_anomaly(anomaly, title, ylabel="Order"):
+    """Diverging bar chart of observed minus size-expected extinctions.
+
+    Red bars: groups that lost more species than their body sizes
+    predict. Blue bars: groups that lost fewer.
+
+    Parameters
+    ----------
+    anomaly : pandas.DataFrame
+        Output of anomaly_by_group(), with a "difference" column.
+    title : str
+        Chart title.
+    ylabel : str, optional
+        Label of the y-axis (what the groups are). Default "Order".
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The finished chart.
+    """
+    data = anomaly.sort_values("difference")
+    colors = [MORE_COLOR if d > 0 else FEWER_COLOR
+              for d in data["difference"]]
+
+    fig, ax = plt.subplots(figsize=(8, 0.35 * len(data) + 1.5))
+    ax.barh(data.index.astype(str), data["difference"], color=colors)
+    ax.axvline(0, color="#666666", linewidth=1)
+
+    legend_items = [
+        mpatches.Patch(color=MORE_COLOR,
+                       label="More extinctions than body size predicts"),
+        mpatches.Patch(color=FEWER_COLOR,
+                       label="Fewer extinctions than body size predicts"),
+    ]
+    ax.legend(handles=legend_items, loc="upper left", frameon=False)
+
+    ax.set_title(title)
+    ax.set_xlabel("Observed minus expected extinctions (number of species)")
+    ax.set_ylabel(ylabel)
+    ax.grid(axis="x", color="#e0e0e0")
+    ax.set_axisbelow(True)
+    ax.spines[["top", "right", "left"]].set_visible(False)
+    ax.tick_params(axis="y", length=0)
 
     fig.tight_layout()
     return fig
