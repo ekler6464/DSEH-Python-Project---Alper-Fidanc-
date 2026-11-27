@@ -127,3 +127,25 @@ def mass_trend(df, step=0.5, min_species=10):
     table = table[table["n_species"] >= min_species]
     result = stats.linregress(table.index, table["rate"])
     return table, result
+
+
+def count_table(df, row_col, col_col):
+    """Number of species for every combination of two columns.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Cleaned trait table from clean_traits().
+    row_col : str
+        Column whose values become the rows, e.g. "mass_bin".
+    col_col : str
+        Column whose values become the columns, e.g. "diet_type".
+
+    Returns
+    -------
+    pandas.DataFrame
+        Grid of species counts, with 0 for empty combinations.
+    """
+    return df.pivot_table(index=row_col, columns=col_col,
+                          values="is_extinct", aggfunc="size",
+                          observed=True, fill_value=0)
