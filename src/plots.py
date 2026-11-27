@@ -194,3 +194,55 @@ def plot_anomaly(anomaly, title, ylabel="Order"):
 
     fig.tight_layout()
     return fig
+
+
+def plot_mass_trend(table, result, title):
+    """Scatter plot of extinction rate per mass step, with the fitted line.
+
+    Dot size grows with the number of species in the step.
+
+    Parameters
+    ----------
+    table : pandas.DataFrame
+        First output of mass_trend(): one row per log-mass step,
+        with n_species and rate.
+    result : scipy.stats LinregressResult
+        Second output of mass_trend(): the fitted line.
+    title : str
+        Chart title.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The finished chart.
+    """
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    ax.scatter(table.index, table["rate"],
+               s=30 + 4 * table["n_species"] ** 0.5,
+               color=BAR_COLOR, edgecolor="white", linewidth=1, zorder=3)
+
+    x = [table.index.min(), table.index.max()]
+    y = [result.intercept + result.slope * xi for xi in x]
+    ax.plot(x, y, color="#666666", linewidth=2, zorder=2)
+
+    if result.pvalue < 0.001:
+        p_text = "p < 0.001"
+    else:
+        p_text = f"p = {result.pvalue:.3f}"
+    ax.text(0.02, 0.95,
+            f"+{result.slope * 100:.0f} percentage points per ×10 body mass\n"
+            f"R² = {result.rvalue ** 2:.2f}, {p_text}",
+            transform=ax.transAxes, va="top")
+
+    ax.set_xticks(MASS_TICKS)
+    ax.set_xticklabels(MASS_TICK_LABELS)
+    ax.yaxis.set_major_formatter(mtick.PercentFormatter(1.0))
+    ax.set_title(title)
+    ax.set_xlabel("Body mass (log scale)")
+    ax.set_ylabel("Share of species extinct")
+    ax.grid(color="#e0e0e0")
+    ax.set_axisbelow(True)
+    ax.spines[["top", "right"]].set_visible(False)
+
+    fig.tight_layout()
+    return fig
