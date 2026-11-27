@@ -2,6 +2,7 @@
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
+import pandas as pd
 import seaborn as sns
 
 BAR_COLOR = "#257de0"
@@ -10,6 +11,7 @@ STATUS_ORDER = ["Prehistoric Extinct", "Historically Extinct",
 MASS_TICKS = [0, 1, 2, 3, 4, 5, 6, 7, 8]
 MASS_TICK_LABELS = ["1 g", "10 g", "100 g", "1 kg", "10 kg",
                     "100 kg", "1 t", "10 t", "100 t"]
+DIET_ORDER = ["Herbivore", "Carnivore", "Invertivore", "Generalist"]
 
 def plot_rate_bars(rates, title, xlabel):
     """Bar chart of extinction rate per group.
@@ -81,6 +83,63 @@ def plot_mass_violin(df, title = "Body mass of mammals by extinction status"):
     ax.grid(axis="y", color="#e0e0e0")
     ax.set_axisbelow(True)
     ax.spines[["top", "right"]].set_visible(False)
+
+    fig.tight_layout()
+    return fig
+
+
+def plot_rate_heatmap(grid, counts, title, xlabel="Diet", ylabel="Body mass"):
+    """Heatmap of extinction rates, with the species count in each cell.
+
+    Rows are shown with the largest size class at the top. Cells with
+    too few species (NaN in grid) are grey and show only their count.
+
+    Parameters
+    ----------
+    grid : pandas.DataFrame
+        Output of rate_table(): extinction rates from 0 to 1.
+    counts : pandas.DataFrame
+        Output of count_table() for the same two columns.
+    title : str
+        Chart title.
+    xlabel : str, optional
+        Label of the x-axis. Default "Diet".
+    ylabel : str, optional
+        Label of the y-axis. Default "Body mass".
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+        The finished chart.
+    """
+    grid = grid.reindex(columns=DIET_ORDER).iloc[::-1]
+    counts = counts.reindex(columns=DIET_ORDER).iloc[::-1]
+
+    fig, ax = plt.subplots(figsize=(7.5, 5))
+    sns.heatmap(grid, annot=False, cmap="Blues", vmin=0, vmax=1,
+                linewidths=2, linecolor="white",
+                cbar_kws={"format": mtick.PercentFormatter(1.0),
+                          "label": "Share of species extinct"},
+                ax=ax)
+    ax.set_facecolor("#efefef")
+
+    for i, row in enumerate(grid.index):
+        for j, col in enumerate(grid.columns):
+            rate = grid.loc[row, col]
+            n = counts.loc[row, col]
+            if pd.isna(rate):
+                text, color = f"n = {n}", "#666666"
+            else:
+                text = f"{rate:.0%}\nn = {n}"
+                color = "white" if rate > 0.5 else "#191919"
+            ax.text(j + 0.5, i + 0.5, text, ha="center", va="center",
+                    color=color, fontsize=9)
+
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.tick_params(axis="y", rotation=0)
+    ax.tick_params(length=0)
 
     fig.tight_layout()
     return fig
