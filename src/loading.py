@@ -123,3 +123,19 @@ def clean_traits(df):
     df["diet_type"] = df.apply(classify_diet, axis=1)
 
     return df
+
+
+def land_mammals(df):
+    """Return only the species that are not marine.
+
+    Parameters
+    ----------
+    df : pandas.DataFrame
+        Cleaned trait table from clean_traits().
+
+    Returns
+    -------
+    pandas.DataFrame
+        The rows where Marine == 0.
+    """
+    return df[df["Marine"] == 0]
