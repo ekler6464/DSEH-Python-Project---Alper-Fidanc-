@@ -16,6 +16,7 @@ DIET_ORDER = ["Herbivore", "Carnivore", "Invertivore", "Generalist"]
 MORE_COLOR = "#ec4647"    # red: more extinctions than expected
 FEWER_COLOR = "#257de0"   # blue: fewer extinctions than expected
 
+
 def plot_rate_bars(rates, title, xlabel):
     """Bar chart of extinction rate per group.
 
@@ -49,7 +50,8 @@ def plot_rate_bars(rates, title, xlabel):
     return fig
 
 
-def plot_mass_violin(df, title="Body mass of mammals by extinction status"):
+def plot_mass_violin(df, title="Body mass of mammals by extinction status",
+                     highlight=None):
     """Violin plot of body mass distribution for each extinction status group.
 
     Groups are ordered like a timeline: prehistoric extinctions,
@@ -62,6 +64,9 @@ def plot_mass_violin(df, title="Body mass of mammals by extinction status"):
         cleaned trait table from clean_traits()
     title : str, optional
         Chart title
+    highlight : dict, optional
+        Species to mark with a labelled dot, as
+        {"Binomial.1.2 name": "label"}. Default = None
 
     Returns
     -------
@@ -72,6 +77,19 @@ def plot_mass_violin(df, title="Body mass of mammals by extinction status"):
     sns.violinplot(data=df, x="status_group", y="log_mass",
                    order=STATUS_ORDER, color=BAR_COLOR, cut=0,
                    inner="quartile", ax=ax)
+
+    if highlight:
+        for species, label in highlight.items():
+            row = df[df["Binomial.1.2"] == species]
+            if row.empty:
+                continue
+            x = STATUS_ORDER.index(row["status_group"].iloc[0])
+            y = row["log_mass"].iloc[0]
+            ax.scatter(x, y, s=60, color="#191919", edgecolor="white",
+                       linewidth=1.5, zorder=3)
+            ax.annotate(label, (x, y), xytext=(10, 0),
+                        textcoords="offset points", va="center",
+                        fontsize=9)
 
     counts = df["status_group"].value_counts()
     ax.set_xticks(range(len(STATUS_ORDER)))
