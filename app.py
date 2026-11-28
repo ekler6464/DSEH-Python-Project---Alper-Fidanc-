@@ -16,6 +16,12 @@ ANOMALY_GROUPS = {
     "Diet": "diet_type",
 }
 
+HOMININS = {
+    "Homo_neanderthalensis": "Neanderthals & Denisovans",
+    "Homo_floresiensis": "H. floresiensis",
+    "Homo_sapiens": "H. sapiens (us)",
+}
+
 
 @st.cache_data
 def get_data():
@@ -49,7 +55,7 @@ st.write(
     "This analysis aims to visualize which species have been more affected.\n\n"
     "Data used for the project is from PHYLACINE 1.2.1 (Faurby et al., 2018), which "
     "contains trait characteristics covering all known mammalian species since the "
-    "last Interglacial Period which began around 130,000 years ago."
+    "last interglacial period which began around 130,000 years ago."
 )
 
 # ---- Load data -------------------------------------------------------------
@@ -63,6 +69,7 @@ except (RuntimeError, FileNotFoundError) as error:
 st.sidebar.header("Options")
 land_only = st.sidebar.checkbox("Land mammals only", value=True)
 min_species = st.sidebar.slider("Minimum species per group", 5, 50, 10, 5)
+show_hominins = st.sidebar.checkbox("Highlight human species", value=True)
 
 df = land_mammals(all_species) if land_only else all_species
 st.sidebar.write(f"{len(df)} species, {df['is_extinct'].sum()} extinct")
@@ -71,7 +78,8 @@ st.sidebar.write(f"{len(df)} species, {df['is_extinct'].sum()} extinct")
 st.header("1. Who went extinct?")
 st.write("Prehistoric extinctions hit large animals; extinctions since 1500 "
          "hit mostly small, island species.")
-show(plot_mass_violin(df))
+highlight = HOMININS if show_hominins else None
+show(plot_mass_violin(df, highlight=highlight))
 
 # ---- 2. Size matters -------------------------------------------------------
 st.header("2. The bigger the animal, the higher the risk")
